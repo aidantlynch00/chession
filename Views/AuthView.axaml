@@ -43,14 +43,10 @@
                        TextAlignment="Center"
                        IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
 
-            <Button Content="Get your token at lichess.org/account/oauth/token"
-                    FontSize="12"
-                    Foreground="CornflowerBlue"
-                    Background="Transparent"
-                    BorderThickness="0"
-                    HorizontalAlignment="Center"
-                    Cursor="Hand"
-                    Command="{Binding OpenTokenUrlCommand}" />
+            <HyperlinkButton NavigateUri="https://lichess.org/account/oauth/token/create"
+                             Content="Get your token at lichess.org/account/oauth/token"
+                             FontSize="12"
+                             HorizontalAlignment="Center" />
         </StackPanel>
     </Grid>
 </UserControl>

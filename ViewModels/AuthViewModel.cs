@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -34,7 +33,6 @@ public class AuthViewModel : ViewModelBase
     }
 
     public ICommand SubmitCommand { get; }
-    public ICommand OpenTokenUrlCommand { get; }
 
     public event EventHandler? AuthenticationSucceeded;
 
@@ -42,13 +40,6 @@ public class AuthViewModel : ViewModelBase
     {
         _tokenStorage = tokenStorage;
         SubmitCommand = new RelayCommand(Submit, CanSubmit);
-        OpenTokenUrlCommand = new RelayCommand(OpenTokenUrl);
-    }
-
-    private void OpenTokenUrl()
-    {
-        const string url = "https://lichess.org/account/oauth/token/create";
-        Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
     }
 
     private bool CanSubmit()
