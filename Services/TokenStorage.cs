@@ -24,62 +24,30 @@ public class TokenStorage : ITokenStorage
         if (!File.Exists(_tokenFilePath))
             return null;
 
-        try
-        {
-            var json = await File.ReadAllTextAsync(_tokenFilePath);
-            var data = JsonSerializer.Deserialize<TokenData>(json);
-            return data;
-        }
-        catch
-        {
-            return null;
-        }
+        var json = await File.ReadAllTextAsync(_tokenFilePath);
+        return JsonSerializer.Deserialize<TokenData>(json);
     }
 
-    public async Task<TokenStorageResult> StoreTokenAsync(string token)
+    public async Task StoreTokenAsync(string token)
     {
-        try
+        var directory = Path.GetDirectoryName(_tokenFilePath)!;
+        if (!Directory.Exists(directory))
         {
-            var directory = Path.GetDirectoryName(_tokenFilePath)!;
-            if (!Directory.Exists(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
+            Directory.CreateDirectory(directory);
+        }
 
-            var data = new TokenData(token, DateTimeOffset.UtcNow);
-            var json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
-            await File.WriteAllTextAsync(_tokenFilePath, json);
-            
-            return new TokenStorageResult(true);
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return new TokenStorageResult(false, $"Permission denied: {ex.Message}");
-        }
-        catch (IOException ex)
-        {
-            return new TokenStorageResult(false, $"IO error: {ex.Message}");
-        }
+        var data = new TokenData(token, DateTimeOffset.UtcNow);
+        var json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
+        await File.WriteAllTextAsync(_tokenFilePath, json);
     }
 
-    public Task<TokenStorageResult> ClearTokenAsync()
+    public Task ClearTokenAsync()
     {
-        try
+        if (File.Exists(_tokenFilePath))
         {
-            if (File.Exists(_tokenFilePath))
-            {
-                File.Delete(_tokenFilePath);
-            }
-            return Task.FromResult(new TokenStorageResult(true));
+            File.Delete(_tokenFilePath);
         }
-        catch (UnauthorizedAccessException ex)
-        {
-            return Task.FromResult(new TokenStorageResult(false, $"Permission denied: {ex.Message}"));
-        }
-        catch (IOException ex)
-        {
-            return Task.FromResult(new TokenStorageResult(false, $"IO error: {ex.Message}"));
-        }
+        return Task.CompletedTask;
     }
 
     private static string GetAppDataPath()

@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using chession.Services;
@@ -56,16 +57,20 @@ public class AuthViewModel : ViewModelBase
 
         try
         {
-            var result = await _tokenStorage.StoreTokenAsync(Token.Trim());
-            
-            if (result.Success)
-            {
-                AuthenticationSucceeded?.Invoke(this, EventArgs.Empty);
-            }
-            else
-            {
-                ErrorMessage = result.ErrorMessage ?? "Failed to store token.";
-            }
+            await _tokenStorage.StoreTokenAsync(Token.Trim());
+            AuthenticationSucceeded?.Invoke(this, EventArgs.Empty);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            ErrorMessage = $"Permission denied: {ex.Message}";
+        }
+        catch (IOException ex)
+        {
+            ErrorMessage = $"IO error: {ex.Message}";
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Failed to store token: {ex.Message}";
         }
         finally
         {
