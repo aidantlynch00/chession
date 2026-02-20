@@ -43,12 +43,14 @@
                        TextAlignment="Center"
                        IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
 
-            <TextBlock FontSize="12"
-                       Foreground="Gray"
-                       HorizontalAlignment="Center"
-                       TextWrapping="Wrap"
-                       TextAlignment="Center"
-                       Text="Get your token at lichess.org/account/oauth/token" />
+            <Button Content="Get your token at lichess.org/account/oauth/token"
+                    FontSize="12"
+                    Foreground="CornflowerBlue"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    HorizontalAlignment="Center"
+                    Cursor="Hand"
+                    Command="{Binding OpenTokenUrlCommand}" />
         </StackPanel>
     </Grid>
 </UserControl>
