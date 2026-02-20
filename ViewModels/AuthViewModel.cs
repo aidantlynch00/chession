@@ -14,10 +14,27 @@ public class AuthViewModel : ViewModelBase
     private string? _errorMessage;
     private bool _isLoading;
 
+    private RelayCommand? _submitCommand;
+
+    public ICommand SubmitCommand => _submitCommand ??= new RelayCommand(Submit, CanSubmit);
+
+    public event EventHandler? AuthenticationSucceeded;
+
+    public AuthViewModel(ITokenStorage tokenStorage)
+    {
+        _tokenStorage = tokenStorage;
+    }
+
     public string Token
     {
         get => _token;
-        set => SetProperty(ref _token, value);
+        set
+        {
+            if (SetProperty(ref _token, value))
+            {
+                _submitCommand?.RaiseCanExecuteChanged();
+            }
+        }
     }
 
     public string? ErrorMessage
@@ -29,17 +46,13 @@ public class AuthViewModel : ViewModelBase
     public bool IsLoading
     {
         get => _isLoading;
-        set => SetProperty(ref _isLoading, value);
-    }
-
-    public ICommand SubmitCommand { get; }
-
-    public event EventHandler? AuthenticationSucceeded;
-
-    public AuthViewModel(ITokenStorage tokenStorage)
-    {
-        _tokenStorage = tokenStorage;
-        SubmitCommand = new RelayCommand(Submit, CanSubmit);
+        set
+        {
+            if (SetProperty(ref _isLoading, value))
+            {
+                _submitCommand?.RaiseCanExecuteChanged();
+            }
+        }
     }
 
     private bool CanSubmit()
@@ -75,7 +88,7 @@ public class AuthViewModel : ViewModelBase
         finally
         {
             IsLoading = false;
-            ((RelayCommand)SubmitCommand).RaiseCanExecuteChanged();
+            _submitCommand?.RaiseCanExecuteChanged();
         }
     }
 
