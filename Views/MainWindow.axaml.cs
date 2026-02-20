@@ -1,12 +1,18 @@
+using System;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using chession.Services;
 using chession.ViewModels;
+using LichessSharp.Exceptions;
 
 namespace chession.Views;
 
 public partial class MainWindow : Window
 {
+    private ITokenStorage _tokenStorage = null!;
+    private AuthViewModel? _authViewModel;
+    private MainViewModel? _mainViewModel;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -14,27 +20,57 @@ public partial class MainWindow : Window
 
     public async Task InitializeAsync(ITokenStorage tokenStorage)
     {
-        var token = await tokenStorage.GetTokenAsync();
-        
-        if (token == null)
+        _tokenStorage = tokenStorage;
+        var tokenData = await _tokenStorage.GetTokenAsync();
+
+        if (tokenData == null)
         {
-            ShowAuthView(tokenStorage);
+            ShowAuthView();
         }
         else
         {
-            ShowMainView();
+            await ShowMainViewAsync(tokenData.Token);
         }
     }
 
-    private void ShowAuthView(ITokenStorage tokenStorage)
+    private void ShowAuthView(string? errorMessage = null)
     {
-        var viewModel = new AuthViewModel(tokenStorage);
-        viewModel.AuthenticationSucceeded += (s, e) => ShowMainView();
-        MainContent.Content = new AuthView(viewModel);
+        _authViewModel = new AuthViewModel();
+        _authViewModel.ErrorMessage = errorMessage;
+        _authViewModel.TokenSubmitted += OnTokenSubmitted;
+        MainContent.Content = new AuthView(_authViewModel);
     }
 
-    private void ShowMainView()
+    private async void OnTokenSubmitted(object? sender, string token)
     {
-        MainContent.Content = new MainView();
+        await ShowMainViewAsync(token);
+    }
+
+    private async Task ShowMainViewAsync(string token)
+    {
+        var lichessService = new LichessService(token);
+        _mainViewModel = new MainViewModel(lichessService);
+        _mainViewModel.AuthenticationFailed += OnAuthenticationFailed;
+        MainContent.Content = new MainView { DataContext = _mainViewModel };
+
+        try
+        {
+            await _mainViewModel.InitializeAsync();
+            await _tokenStorage.StoreTokenAsync(token);
+        }
+        catch (LichessAuthenticationException)
+        {
+            ShowAuthView("Invalid or expired token. Please enter a new one.");
+        }
+        catch (Exception ex)
+        {
+            ShowAuthView($"Failed to connect: {ex.Message}");
+        }
+    }
+
+    private void OnAuthenticationFailed(object? sender, EventArgs e)
+    {
+        _ = _tokenStorage.ClearTokenAsync();
+        ShowAuthView("Session expired. Please enter your token again.");
     }
 }

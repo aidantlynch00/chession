@@ -1,8 +1,36 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="chession.Views.MainView">
-    <TextBlock Text="Session Tracker"
-               HorizontalAlignment="Center"
-               VerticalAlignment="Center"
-               FontSize="24" />
+             xmlns:vm="using:chession.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="300"
+             x:Class="chession.Views.MainView"
+             x:DataType="vm:MainViewModel">
+
+    <Grid Margin="40">
+        <StackPanel Spacing="16" VerticalAlignment="Center">
+            <TextBlock Text="Session Tracker"
+                       FontSize="24"
+                       FontWeight="Bold"
+                       HorizontalAlignment="Center" />
+
+            <ProgressBar IsIndeterminate="True"
+                         IsVisible="{Binding IsLoading}"
+                         Height="4" />
+
+            <TextBlock Text="{Binding ErrorMessage}"
+                       Foreground="Red"
+                       HorizontalAlignment="Center"
+                       TextWrapping="Wrap"
+                       TextAlignment="Center"
+                       IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+            <StackPanel IsVisible="{Binding Profile, Converter={x:Static ObjectConverters.IsNotNull}}"
+                        Spacing="8">
+                <TextBlock Text="{Binding Profile.Username, StringFormat='Welcome, {0}!'}"
+                           FontSize="18"
+                           HorizontalAlignment="Center" />
+            </StackPanel>
+        </StackPanel>
+    </Grid>
 </UserControl>

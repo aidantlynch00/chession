@@ -23,18 +23,12 @@
 
             <TextBox Text="{Binding Token}"
                      Watermark="lip_xxx..."
-                     PasswordChar="*"
-                     IsEnabled="{Binding !IsLoading}" />
+                     PasswordChar="*" />
 
             <Button Content="Connect"
                     Command="{Binding SubmitCommand}"
-                    IsEnabled="{Binding !IsLoading}"
                     HorizontalAlignment="Stretch"
                     HorizontalContentAlignment="Center" />
-
-            <ProgressBar IsIndeterminate="True"
-                         IsVisible="{Binding IsLoading}"
-                         Height="4" />
 
             <TextBlock Text="{Binding ErrorMessage}"
                        Foreground="Red"
