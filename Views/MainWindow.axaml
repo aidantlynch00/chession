@@ -5,8 +5,5 @@
         Width="600"
         Height="400"
         CanResize="False">
-    <TextBlock Text="Session Tracker"
-               HorizontalAlignment="Center"
-               VerticalAlignment="Center"
-               FontSize="24" />
+    <ContentControl x:Name="MainContent" />
 </Window>
