@@ -57,20 +57,23 @@
                 <Border IsVisible="{Binding IsOverflowExpanded}"
                         Background="#1A1A1A" CornerRadius="8" Padding="8"
                         HorizontalAlignment="Center"
-                        MaxWidth="380">
-                    <ItemsControl ItemsSource="{Binding CompletedGames}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel Orientation="Horizontal" MaxWidth="360" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Width="32" Height="32" Margin="2" CornerRadius="4"
-                                        Background="{Binding Converter={x:Static conv:ResultToColorConverter.Instance}}" />
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                        MaxWidth="380" MaxHeight="160">
+                    <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                                  VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding CompletedGames}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal" MaxWidth="360" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Width="32" Height="32" Margin="2" CornerRadius="4"
+                                            Background="{Binding Converter={x:Static conv:ResultToColorConverter.Instance}}" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
                 </Border>
 
                 <ToggleButton IsChecked="{Binding IsOverflowExpanded}"
