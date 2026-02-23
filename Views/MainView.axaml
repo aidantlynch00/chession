@@ -38,7 +38,8 @@
             </Border>
 
             <ItemsControl ItemsSource="{Binding DisplaySlots}"
-                          HorizontalAlignment="Center">
+                          HorizontalAlignment="Center"
+                          IsVisible="{Binding !IsOverflowExpanded}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <StackPanel Orientation="Horizontal" />
@@ -53,14 +54,6 @@
             </ItemsControl>
 
             <StackPanel IsVisible="{Binding HasOverflow}" Spacing="8">
-                <ToggleButton IsChecked="{Binding IsOverflowExpanded}"
-                              HorizontalAlignment="Center"
-                              Background="Transparent"
-                              BorderBrush="#555"
-                              Foreground="#AAA"
-                              Padding="12,6"
-                              Content="Show all games ▼" />
-
                 <Border IsVisible="{Binding IsOverflowExpanded}"
                         Background="#1A1A1A" CornerRadius="8" Padding="8"
                         HorizontalAlignment="Center"
@@ -79,6 +72,14 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </Border>
+
+                <ToggleButton IsChecked="{Binding IsOverflowExpanded}"
+                              HorizontalAlignment="Center"
+                              Background="Transparent"
+                              BorderBrush="#555"
+                              Foreground="#AAA"
+                              Padding="12,6"
+                              Content="Show all games ▼" />
             </StackPanel>
 
         </StackPanel>
