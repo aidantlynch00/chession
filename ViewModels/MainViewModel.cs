@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Threading.Tasks;
 using chession.Models;
 using chession.Services;
@@ -10,6 +11,8 @@ namespace chession.ViewModels;
 
 public class MainViewModel : ViewModelBase
 {
+    private const int SlotCount = 10;
+
     private readonly ILichessService _lichessService;
     private User? _profile;
     private string? _errorMessage;
@@ -17,12 +20,19 @@ public class MainViewModel : ViewModelBase
     private int _wins;
     private int _losses;
     private int _draws;
+    private bool _hasOverflow;
+    private bool _isOverflowExpanded;
 
     public event EventHandler? AuthenticationFailed;
 
     public MainViewModel(ILichessService lichessService)
     {
         _lichessService = lichessService;
+
+        for (var i = 0; i < SlotCount; i++)
+            DisplaySlots.Add(new GameSlot(null));
+
+        CompletedGames.CollectionChanged += OnCompletedGamesChanged;
     }
 
     public User? Profile
@@ -76,6 +86,33 @@ public class MainViewModel : ViewModelBase
     public string SessionScore => $"{Wins + (Draws * 0.5):F1} / {Wins + Losses + Draws}";
 
     public ObservableCollection<GameResult> CompletedGames { get; } = new();
+
+    public ObservableCollection<GameSlot> DisplaySlots { get; } = new();
+
+    public bool HasOverflow
+    {
+        get => _hasOverflow;
+        private set => SetProperty(ref _hasOverflow, value);
+    }
+
+    public bool IsOverflowExpanded
+    {
+        get => _isOverflowExpanded;
+        set => SetProperty(ref _isOverflowExpanded, value);
+    }
+
+    private void OnCompletedGamesChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        RefreshDisplaySlots();
+    }
+
+    private void RefreshDisplaySlots()
+    {
+        for (var i = 0; i < SlotCount; i++)
+            DisplaySlots[i] = new GameSlot(i < CompletedGames.Count ? CompletedGames[i] : null);
+
+        HasOverflow = CompletedGames.Count > SlotCount;
+    }
 
     public async Task InitializeAsync()
     {

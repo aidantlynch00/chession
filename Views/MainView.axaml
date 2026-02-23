@@ -37,20 +37,49 @@
                            HorizontalAlignment="Center" />
             </Border>
 
-            <ItemsControl ItemsSource="{Binding CompletedGames}"
+            <ItemsControl ItemsSource="{Binding DisplaySlots}"
                           HorizontalAlignment="Center">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <WrapPanel Orientation="Horizontal" />
+                        <StackPanel Orientation="Horizontal" />
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
-                    <DataTemplate>
+                    <DataTemplate x:DataType="vm:GameSlot">
                         <Border Width="32" Height="32" Margin="2" CornerRadius="4"
-                                Background="{Binding Converter={x:Static conv:ResultToColorConverter.Instance}}" />
+                                Background="{Binding Result, Converter={x:Static conv:ResultToColorConverter.Instance}}" />
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
+
+            <StackPanel IsVisible="{Binding HasOverflow}" Spacing="8">
+                <ToggleButton IsChecked="{Binding IsOverflowExpanded}"
+                              HorizontalAlignment="Center"
+                              Background="Transparent"
+                              BorderBrush="#555"
+                              Foreground="#AAA"
+                              Padding="12,6"
+                              Content="Show all games ▼" />
+
+                <Border IsVisible="{Binding IsOverflowExpanded}"
+                        Background="#1A1A1A" CornerRadius="8" Padding="8"
+                        HorizontalAlignment="Center"
+                        MaxWidth="380">
+                    <ItemsControl ItemsSource="{Binding CompletedGames}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal" MaxWidth="360" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Width="32" Height="32" Margin="2" CornerRadius="4"
+                                        Background="{Binding Converter={x:Static conv:ResultToColorConverter.Instance}}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
+            </StackPanel>
 
         </StackPanel>
     </Grid>
