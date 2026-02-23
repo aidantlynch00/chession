@@ -1,17 +1,20 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:chession.ViewModels"
+             xmlns:conv="using:chession.Converters"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="300"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="400"
              x:Class="chession.Views.MainView"
              x:DataType="vm:MainViewModel">
 
-    <Grid Margin="40">
-        <StackPanel Spacing="16" VerticalAlignment="Center">
-            <TextBlock Text="Session Tracker"
+    <Grid Background="#262626">
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="24">
+
+            <TextBlock Text="{Binding Profile.Username}"
                        FontSize="24"
                        FontWeight="Bold"
+                       Foreground="White"
                        HorizontalAlignment="Center" />
 
             <ProgressBar IsIndeterminate="True"
@@ -25,12 +28,30 @@
                        TextAlignment="Center"
                        IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
 
-            <StackPanel IsVisible="{Binding Profile, Converter={x:Static ObjectConverters.IsNotNull}}"
-                        Spacing="8">
-                <TextBlock Text="{Binding Profile.Username, StringFormat='Welcome, {0}!'}"
-                           FontSize="18"
+            <Border Background="#1A1A1A" CornerRadius="8" Padding="24,16"
+                    HorizontalAlignment="Center">
+                <TextBlock Text="{Binding SessionScore}"
+                           FontSize="48"
+                           FontWeight="Bold"
+                           Foreground="White"
                            HorizontalAlignment="Center" />
-            </StackPanel>
+            </Border>
+
+            <ItemsControl ItemsSource="{Binding CompletedGames}"
+                          HorizontalAlignment="Center">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Width="32" Height="32" Margin="2" CornerRadius="4"
+                                Background="{Binding Converter={x:Static conv:ResultToColorConverter.Instance}}" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
         </StackPanel>
     </Grid>
 </UserControl>

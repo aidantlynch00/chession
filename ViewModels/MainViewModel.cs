@@ -1,5 +1,7 @@
 using System;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using chession.Models;
 using chession.Services;
 using LichessSharp.Exceptions;
 using LichessSharp.Models.Users;
@@ -12,6 +14,9 @@ public class MainViewModel : ViewModelBase
     private User? _profile;
     private string? _errorMessage;
     private bool _isLoading = true;
+    private int _wins;
+    private int _losses;
+    private int _draws;
 
     public event EventHandler? AuthenticationFailed;
 
@@ -37,6 +42,40 @@ public class MainViewModel : ViewModelBase
         get => _isLoading;
         set => SetProperty(ref _isLoading, value);
     }
+
+    public int Wins
+    {
+        get => _wins;
+        private set
+        {
+            if (SetProperty(ref _wins, value))
+                OnPropertyChanged(nameof(SessionScore));
+        }
+    }
+
+    public int Losses
+    {
+        get => _losses;
+        private set
+        {
+            if (SetProperty(ref _losses, value))
+                OnPropertyChanged(nameof(SessionScore));
+        }
+    }
+
+    public int Draws
+    {
+        get => _draws;
+        private set
+        {
+            if (SetProperty(ref _draws, value))
+                OnPropertyChanged(nameof(SessionScore));
+        }
+    }
+
+    public string SessionScore => $"{Wins + (Draws * 0.5):F1} / {Wins + Losses + Draws}";
+
+    public ObservableCollection<GameResult> CompletedGames { get; } = new();
 
     public async Task InitializeAsync()
     {
