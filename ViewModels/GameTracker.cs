@@ -104,12 +104,14 @@ public class GameTracker : IDisposable
         {
             await foreach (var evt in _lichessService.StreamGameMovesAsync(gameId, cancellationToken))
             {
-                _logger.LogTrace("Game {GameId} event: status={Status}, lastMove={LastMove}, turns={Turns}", 
-                    gameId, evt.Status?.ToString() ?? "null", evt.Lm ?? "null", evt.Turns);
+                if (evt.Lm != null)
+                {
+                    _logger.LogDebug("Game {GameId} move: {LastMove}", gameId, evt.Lm);
+                }
             }
 
-            _logger.LogDebug("Stream for game {GameId} completed normally", gameId);
-            var result = await DetermineResultAsync(gameId, userColor);
+            _logger.LogDebug("Stream for game {GameId} completed", gameId);
+            var result = await DetermineGameResultAsync(gameId, userColor);
             if (result.HasValue)
             {
                 _logger.LogInformation("Game {GameId} finished with result: {Result}", gameId, result);
@@ -139,22 +141,9 @@ public class GameTracker : IDisposable
         }
     }
 
-    private async Task<GameResult?> DetermineResultAsync(string gameId, string userColor)
+    private async Task<GameResult?> DetermineGameResultAsync(string gameId, string userColor)
     {
-        try
-        {
-            var game = await _lichessService.GetGameAsync(gameId);
-            return DetermineResult(game, userColor);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error fetching game {GameId}", gameId);
-            return null;
-        }
-    }
-
-    private GameResult? DetermineResult(Game game, string userColor)
-    {
+        var game = await _lichessService.GetGameAsync(gameId);
         var status = game.Status;
 
         if (status == GameStatus.Aborted ||
