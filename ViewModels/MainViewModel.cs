@@ -142,7 +142,7 @@ public class MainViewModel : ViewModelBase, IDisposable
         }
         catch (LichessAuthenticationException)
         {
-            AuthenticationFailed?.Invoke(this, EventArgs.Empty);
+            OnAuthenticationFailed();
         }
         catch (Exception ex)
         {
@@ -153,6 +153,8 @@ public class MainViewModel : ViewModelBase, IDisposable
             IsLoading = false;
         }
     }
+
+    public void OnAuthenticationFailed() => AuthenticationFailed?.Invoke(this, EventArgs.Empty);
 
     public void RecordGameResult(GameResult result)
     {

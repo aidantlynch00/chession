@@ -54,6 +54,8 @@ public partial class MainWindow : Window
 
     private async Task ShowMainViewAsync(string token)
     {
+        _mainViewModel?.Dispose();
+        
         var lichessService = new LichessService(token);
         _mainViewModel = new MainViewModel(lichessService);
         _mainViewModel.AuthenticationFailed += OnAuthenticationFailed;

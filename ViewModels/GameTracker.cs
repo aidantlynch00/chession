@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using chession.Models;
 using chession.Services;
+using LichessSharp.Exceptions;
 using LichessSharp.Models.Games;
 using LichessSharp.Models.Enums;
 
@@ -24,6 +25,29 @@ public class GameTracker : IDisposable
     {
         _lichessService = lichessService;
         _mainViewModel = mainViewModel;
+    }
+
+    private void StopAll()
+    {
+        _pollTimer?.Dispose();
+        _pollTimer = null;
+
+        _pollingCts?.Cancel();
+        _pollingCts?.Dispose();
+        _pollingCts = null;
+
+        foreach (var cts in _activeGameStreams.Values)
+        {
+            cts.Cancel();
+            cts.Dispose();
+        }
+        _activeGameStreams.Clear();
+    }
+
+    private void HandleAuthenticationFailure()
+    {
+        StopAll();
+        _mainViewModel.OnAuthenticationFailed();
     }
 
     public async Task StartTrackingAsync(string userId)
@@ -68,6 +92,11 @@ public class GameTracker : IDisposable
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
         }
+        catch (LichessAuthenticationException)
+        {
+            Console.WriteLine($"[GameTracker] Authentication failed during polling");
+            HandleAuthenticationFailure();
+        }
         catch (Exception ex)
         {
             Console.WriteLine($"[GameTracker] Error refreshing games: {ex.Message}");
@@ -99,6 +128,11 @@ public class GameTracker : IDisposable
         catch (OperationCanceledException)
         {
             Console.WriteLine($"[GameTracker] Stream cancelled for game {gameId}");
+        }
+        catch (LichessAuthenticationException)
+        {
+            Console.WriteLine($"[GameTracker] Authentication failed while streaming game {gameId}");
+            HandleAuthenticationFailure();
         }
         catch (Exception ex)
         {
@@ -159,16 +193,6 @@ public class GameTracker : IDisposable
     {
         if (_disposed) return;
         _disposed = true;
-
-        _pollTimer?.Dispose();
-        _pollingCts?.Cancel();
-        _pollingCts?.Dispose();
-
-        foreach (var cts in _activeGameStreams.Values)
-        {
-            cts.Cancel();
-            cts.Dispose();
-        }
-        _activeGameStreams.Clear();
+        StopAll();
     }
 }
