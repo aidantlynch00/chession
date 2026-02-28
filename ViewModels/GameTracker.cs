@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -17,10 +18,9 @@ public class GameTracker : IDisposable
     private readonly ILichessService _lichessService;
     private readonly MainViewModel _mainViewModel;
     private readonly ILogger _logger;
-    private readonly Dictionary<string, CancellationTokenSource> _activeGameStreams = new();
+    private readonly ConcurrentDictionary<string, CancellationTokenSource> _activeGameStreams = new();
     private CancellationTokenSource? _pollingCts;
     private Timer? _pollTimer;
-    private string? _userId;
     private bool _disposed;
 
     public GameTracker(ILichessService lichessService, MainViewModel mainViewModel, ILogger logger)
@@ -53,9 +53,8 @@ public class GameTracker : IDisposable
         _mainViewModel.OnAuthenticationFailed();
     }
 
-    public async Task StartTrackingAsync(string userId)
+    public async Task StartTrackingAsync()
     {
-        _userId = userId;
         _pollingCts = new CancellationTokenSource();
 
         await RefreshOngoingGamesAsync(_pollingCts.Token);
@@ -72,24 +71,16 @@ public class GameTracker : IDisposable
         try
         {
             var games = await _lichessService.GetCurrentGamesAsync(9, ct);
-            var currentGameIds = games.Select(g => g.GameId).ToHashSet();
 
             foreach (var game in games)
             {
-                if (!_activeGameStreams.ContainsKey(game.GameId))
-                {
-                    var gameCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-                    _activeGameStreams[game.GameId] = gameCts;
-                    var color = game.Color.ToString().ToLower();
-                    _ = StreamGameAsync(game.GameId, color, gameCts.Token);
-                }
-            }
+                if (game.GameId == null) continue;
 
-            var toRemove = _activeGameStreams.Keys.Except(currentGameIds).ToList();
-            foreach (var gameId in toRemove)
-            {
-                _activeGameStreams[gameId].Cancel();
-                _activeGameStreams.Remove(gameId);
+                if (_activeGameStreams.TryAdd(game.GameId, CancellationTokenSource.CreateLinkedTokenSource(ct)))
+                {
+                    var color = game.Color.ToString().ToLower();
+                    _ = StreamGameAsync(game.GameId, color, _activeGameStreams[game.GameId].Token);
+                }
             }
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
@@ -144,10 +135,7 @@ public class GameTracker : IDisposable
         }
         finally
         {
-            lock (_activeGameStreams)
-            {
-                _activeGameStreams.Remove(gameId);
-            }
+            _activeGameStreams.TryRemove(gameId, out _);
         }
     }
 

@@ -143,7 +143,7 @@ public class MainViewModel : ViewModelBase, IDisposable
             Profile = await _lichessService.GetProfileAsync(_cts.Token);
 
             _gameTracker = new GameTracker(_lichessService, this, _loggerFactory.CreateLogger<GameTracker>());
-            await _gameTracker.StartTrackingAsync(Profile.Id);
+            await _gameTracker.StartTrackingAsync();
         }
         catch (LichessAuthenticationException)
         {
