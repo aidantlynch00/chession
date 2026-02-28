@@ -8,6 +8,7 @@ using chession.Services;
 using LichessSharp.Exceptions;
 using LichessSharp.Models.Games;
 using LichessSharp.Models.Enums;
+using Microsoft.Extensions.Logging;
 
 namespace chession.ViewModels;
 
@@ -15,16 +16,18 @@ public class GameTracker : IDisposable
 {
     private readonly ILichessService _lichessService;
     private readonly MainViewModel _mainViewModel;
+    private readonly ILogger _logger;
     private readonly Dictionary<string, CancellationTokenSource> _activeGameStreams = new();
     private CancellationTokenSource? _pollingCts;
     private Timer? _pollTimer;
     private string? _userId;
     private bool _disposed;
 
-    public GameTracker(ILichessService lichessService, MainViewModel mainViewModel)
+    public GameTracker(ILichessService lichessService, MainViewModel mainViewModel, ILogger logger)
     {
         _lichessService = lichessService;
         _mainViewModel = mainViewModel;
+        _logger = logger;
     }
 
     private void StopAll()
@@ -94,49 +97,50 @@ public class GameTracker : IDisposable
         }
         catch (LichessAuthenticationException)
         {
-            Console.WriteLine($"[GameTracker] Authentication failed during polling");
+            _logger.LogError("Authentication failed during polling");
             HandleAuthenticationFailure();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[GameTracker] Error refreshing games: {ex.Message}");
+            _logger.LogError(ex, "Error refreshing games");
         }
     }
 
     private async Task StreamGameAsync(string gameId, string userColor, CancellationToken cancellationToken)
     {
-        Console.WriteLine($"[GameTracker] Starting stream for game {gameId}");
+        _logger.LogDebug("Starting stream for game {GameId}", gameId);
         try
         {
             await foreach (var evt in _lichessService.StreamGameMovesAsync(gameId, cancellationToken))
             {
-                Console.WriteLine($"[GameTracker] Game {gameId} event: status={evt.Status?.ToString() ?? "null"}, lastMove={evt.Lm ?? "null"}, turns={evt.Turns}");
+                _logger.LogTrace("Game {GameId} event: status={Status}, lastMove={LastMove}, turns={Turns}", 
+                    gameId, evt.Status?.ToString() ?? "null", evt.Lm ?? "null", evt.Turns);
             }
 
-            Console.WriteLine($"[GameTracker] Stream for game {gameId} completed normally");
+            _logger.LogDebug("Stream for game {GameId} completed normally", gameId);
             var result = await DetermineResultAsync(gameId, userColor);
             if (result.HasValue)
             {
-                Console.WriteLine($"[GameTracker] Game {gameId} finished with result: {result}");
+                _logger.LogInformation("Game {GameId} finished with result: {Result}", gameId, result);
                 _mainViewModel.RecordGameResult(result.Value);
             }
             else
             {
-                Console.WriteLine($"[GameTracker] Game {gameId} finished with no result");
+                _logger.LogWarning("Game {GameId} finished with no result", gameId);
             }
         }
         catch (OperationCanceledException)
         {
-            Console.WriteLine($"[GameTracker] Stream cancelled for game {gameId}");
+            _logger.LogDebug("Stream cancelled for game {GameId}", gameId);
         }
         catch (LichessAuthenticationException)
         {
-            Console.WriteLine($"[GameTracker] Authentication failed while streaming game {gameId}");
+            _logger.LogError("Authentication failed while streaming game {GameId}", gameId);
             HandleAuthenticationFailure();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[GameTracker] Stream error for game {gameId}: {ex.Message}");
+            _logger.LogError(ex, "Stream error for game {GameId}", gameId);
         }
         finally
         {
@@ -156,7 +160,7 @@ public class GameTracker : IDisposable
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[GameTracker] Error fetching game {gameId}: {ex.Message}");
+            _logger.LogError(ex, "Error fetching game {GameId}", gameId);
             return null;
         }
     }

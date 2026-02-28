@@ -7,6 +7,7 @@ using chession.Models;
 using chession.Services;
 using LichessSharp.Exceptions;
 using LichessSharp.Models.Users;
+using Microsoft.Extensions.Logging;
 
 namespace chession.ViewModels;
 
@@ -15,6 +16,8 @@ public class MainViewModel : ViewModelBase, IDisposable
     private const int SlotCount = 10;
 
     private readonly ILichessService _lichessService;
+    private readonly ILoggerFactory _loggerFactory;
+    private readonly ILogger _logger;
     private CancellationTokenSource? _cts;
     private GameTracker? _gameTracker;
     private bool _disposed;
@@ -30,9 +33,11 @@ public class MainViewModel : ViewModelBase, IDisposable
 
     public event EventHandler? AuthenticationFailed;
 
-    public MainViewModel(ILichessService lichessService)
+    public MainViewModel(ILichessService lichessService, ILoggerFactory loggerFactory)
     {
         _lichessService = lichessService;
+        _loggerFactory = loggerFactory;
+        _logger = loggerFactory.CreateLogger<MainViewModel>();
 
         for (var i = 0; i < SlotCount; i++)
             DisplaySlots.Add(new GameSlot(null));
@@ -137,7 +142,7 @@ public class MainViewModel : ViewModelBase, IDisposable
         {
             Profile = await _lichessService.GetProfileAsync(_cts.Token);
 
-            _gameTracker = new GameTracker(_lichessService, this);
+            _gameTracker = new GameTracker(_lichessService, this, _loggerFactory.CreateLogger<GameTracker>());
             await _gameTracker.StartTrackingAsync(Profile.Id);
         }
         catch (LichessAuthenticationException)

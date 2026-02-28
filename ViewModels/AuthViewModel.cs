@@ -1,14 +1,21 @@
 using System;
 using System.Windows.Input;
+using Microsoft.Extensions.Logging;
 
 namespace chession.ViewModels;
 
 public class AuthViewModel : ViewModelBase
 {
+    private readonly ILogger _logger;
     private string _token = string.Empty;
     private string? _errorMessage;
 
     private RelayCommand? _submitCommand;
+
+    public AuthViewModel(ILoggerFactory loggerFactory)
+    {
+        _logger = loggerFactory.CreateLogger<AuthViewModel>();
+    }
 
     public ICommand SubmitCommand => _submitCommand ??= new RelayCommand(Submit, CanSubmit);
 
@@ -21,6 +28,7 @@ public class AuthViewModel : ViewModelBase
         {
             if (SetProperty(ref _token, value))
             {
+                _logger.LogDebug("Token length: {Length}", value?.Length ?? 0);
                 _submitCommand?.RaiseCanExecuteChanged();
             }
         }
@@ -29,7 +37,11 @@ public class AuthViewModel : ViewModelBase
     public string? ErrorMessage
     {
         get => _errorMessage;
-        set => SetProperty(ref _errorMessage, value);
+        set
+        {
+            if (value != null) _logger.LogWarning("Error message set: {Error}", value);
+            SetProperty(ref _errorMessage, value);
+        }
     }
 
     private bool CanSubmit()
@@ -40,6 +52,7 @@ public class AuthViewModel : ViewModelBase
     private void Submit()
     {
         ErrorMessage = null;
+        _logger.LogInformation("Token submitted");
         TokenSubmitted?.Invoke(this, Token.Trim());
     }
 

@@ -4,11 +4,17 @@ using Avalonia.Controls;
 using chession.Services;
 using chession.ViewModels;
 using LichessSharp.Exceptions;
+using Microsoft.Extensions.Logging;
 
 namespace chession.Views;
 
 public partial class MainWindow : Window
 {
+    private static readonly ILoggerFactory LogFactory = LoggerFactory.Create(builder =>
+    {
+        builder.AddConsole();
+    });
+
     private ITokenStorage _tokenStorage = null!;
     private AuthViewModel? _authViewModel;
     private MainViewModel? _mainViewModel;
@@ -41,7 +47,7 @@ public partial class MainWindow : Window
 
     private void ShowAuthView(string? errorMessage = null)
     {
-        _authViewModel = new AuthViewModel();
+        _authViewModel = new AuthViewModel(LogFactory);
         _authViewModel.ErrorMessage = errorMessage;
         _authViewModel.TokenSubmitted += OnTokenSubmitted;
         MainContent.Content = new AuthView(_authViewModel);
@@ -57,7 +63,7 @@ public partial class MainWindow : Window
         _mainViewModel?.Dispose();
         
         var lichessService = new LichessService(token);
-        _mainViewModel = new MainViewModel(lichessService);
+        _mainViewModel = new MainViewModel(lichessService, LogFactory);
         _mainViewModel.AuthenticationFailed += OnAuthenticationFailed;
         MainContent.Content = new MainView { DataContext = _mainViewModel };
 
