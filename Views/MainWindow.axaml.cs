@@ -16,6 +16,12 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        Closed += OnClosed;
+    }
+
+    private void OnClosed(object? sender, EventArgs e)
+    {
+        _mainViewModel?.Dispose();
     }
 
     public async Task InitializeAsync(ITokenStorage tokenStorage)

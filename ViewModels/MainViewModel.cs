@@ -1,6 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Threading;
 using System.Threading.Tasks;
 using chession.Models;
 using chession.Services;
@@ -9,12 +10,16 @@ using LichessSharp.Models.Users;
 
 namespace chession.ViewModels;
 
-public class MainViewModel : ViewModelBase
+public class MainViewModel : ViewModelBase, IDisposable
 {
     private const int SlotCount = 10;
 
     private readonly ILichessService _lichessService;
-    private User? _profile;
+    private CancellationTokenSource? _cts;
+    private GameTracker? _gameTracker;
+    private bool _disposed;
+
+    private UserExtended? _profile;
     private string? _errorMessage;
     private bool _isLoading = true;
     private int _wins;
@@ -35,7 +40,7 @@ public class MainViewModel : ViewModelBase
         CompletedGames.CollectionChanged += OnCompletedGamesChanged;
     }
 
-    public User? Profile
+    public UserExtended? Profile
     {
         get => _profile;
         private set => SetProperty(ref _profile, value);
@@ -118,10 +123,14 @@ public class MainViewModel : ViewModelBase
     {
         IsLoading = true;
         ErrorMessage = null;
+        _cts = new CancellationTokenSource();
 
         try
         {
-            Profile = await _lichessService.GetProfileAsync();
+            Profile = await _lichessService.GetProfileAsync(_cts.Token);
+
+            _gameTracker = new GameTracker(_lichessService, this);
+            await _gameTracker.StartTrackingAsync(Profile.Id);
         }
         catch (LichessAuthenticationException)
         {
@@ -135,5 +144,33 @@ public class MainViewModel : ViewModelBase
         {
             IsLoading = false;
         }
+    }
+
+    public void RecordGameResult(GameResult result)
+    {
+        CompletedGames.Insert(0, result);
+
+        switch (result)
+        {
+            case GameResult.Win:
+                Wins++;
+                break;
+            case GameResult.Loss:
+                Losses++;
+                break;
+            case GameResult.Draw:
+                Draws++;
+                break;
+        }
+    }
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _gameTracker?.Dispose();
+        _lichessService.Dispose();
     }
 }
