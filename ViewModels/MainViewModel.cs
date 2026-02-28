@@ -88,7 +88,15 @@ public class MainViewModel : ViewModelBase, IDisposable
         }
     }
 
-    public string SessionScore => $"{Wins + (Draws * 0.5):F1} / {Wins + Losses + Draws}";
+    public string SessionScore
+    {
+        get
+        {
+            var score = Wins + (Draws * 0.5);
+            var scoreStr = Draws % 2 == 0 ? $"{score:F0}" : $"{score:F1}";
+            return $"{scoreStr} / {Wins + Losses + Draws}";
+        }
+    }
 
     public ObservableCollection<GameResult> CompletedGames { get; } = new();
 
