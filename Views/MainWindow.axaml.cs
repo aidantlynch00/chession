@@ -12,7 +12,9 @@ public partial class MainWindow : Window
 {
     private static readonly ILoggerFactory LogFactory = LoggerFactory.Create(builder =>
     {
-        builder.AddConsole();
+        builder
+            .AddFilter("chession", LogLevel.Debug)
+            .AddConsole();
     });
 
     private ITokenStorage _tokenStorage = null!;
