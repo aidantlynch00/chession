@@ -32,7 +32,7 @@ public class TokenStorage : ITokenStorage
             return null;
 
         var json = await File.ReadAllTextAsync(_tokenFilePath);
-        return JsonSerializer.Deserialize<TokenData>(json);
+        return JsonSerializer.Deserialize(json, ChessionJsonContext.Default.TokenData);
     }
 
     /// <inheritdoc />
@@ -45,7 +45,7 @@ public class TokenStorage : ITokenStorage
         }
 
         var data = new TokenData(token, DateTimeOffset.UtcNow);
-        var json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
+        var json = JsonSerializer.Serialize(data, ChessionJsonContext.Default.TokenData);
         await File.WriteAllTextAsync(_tokenFilePath, json);
     }
 

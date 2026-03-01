@@ -46,7 +46,7 @@ public class LichessService : ILichessService
         var response = await _httpClient.GetAsync($"/api/account/playing?nb={count}", cancellationToken);
         response.EnsureSuccessStatusCode();
         var json = await response.Content.ReadAsStringAsync(cancellationToken);
-        var result = JsonSerializer.Deserialize<CurrentGamesResponse>(json);
+        var result = JsonSerializer.Deserialize(json, ChessionJsonContext.Default.CurrentGamesResponse);
         return result?.NowPlaying ?? [];
     }
 
