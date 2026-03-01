@@ -6,6 +6,9 @@ using chession.Models;
 
 namespace chession.Services;
 
+/// <summary>
+/// Implementation of token storage using platform-specific app data folder.
+/// </summary>
 public class TokenStorage : ITokenStorage
 {
     private static readonly string AppName = "chession";
@@ -13,12 +16,16 @@ public class TokenStorage : ITokenStorage
     
     private readonly string _tokenFilePath;
 
+    /// <summary>
+    /// Initializes a new instance of the TokenStorage class.
+    /// </summary>
     public TokenStorage()
     {
         var appDataPath = GetAppDataPath();
         _tokenFilePath = Path.Combine(appDataPath, TokenFileName);
     }
 
+    /// <inheritdoc />
     public async Task<TokenData?> GetTokenAsync()
     {
         if (!File.Exists(_tokenFilePath))
@@ -28,6 +35,7 @@ public class TokenStorage : ITokenStorage
         return JsonSerializer.Deserialize<TokenData>(json);
     }
 
+    /// <inheritdoc />
     public async Task StoreTokenAsync(string token)
     {
         var directory = Path.GetDirectoryName(_tokenFilePath)!;
@@ -41,6 +49,7 @@ public class TokenStorage : ITokenStorage
         await File.WriteAllTextAsync(_tokenFilePath, json);
     }
 
+    /// <inheritdoc />
     public Task ClearTokenAsync()
     {
         if (File.Exists(_tokenFilePath))
@@ -50,6 +59,10 @@ public class TokenStorage : ITokenStorage
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Gets the platform-specific application data folder path.
+    /// </summary>
+    /// <returns>The application data path.</returns>
     private static string GetAppDataPath()
     {
         var basePath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);

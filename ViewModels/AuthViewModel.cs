@@ -4,6 +4,9 @@ using Microsoft.Extensions.Logging;
 
 namespace chession.ViewModels;
 
+/// <summary>
+/// ViewModel for the authentication view handling token input.
+/// </summary>
 public class AuthViewModel : ViewModelBase
 {
     private readonly ILogger _logger;
@@ -12,15 +15,28 @@ public class AuthViewModel : ViewModelBase
 
     private RelayCommand? _submitCommand;
 
+    /// <summary>
+    /// Initializes a new instance of the AuthViewModel class.
+    /// </summary>
+    /// <param name="loggerFactory">The logger factory for creating loggers.</param>
     public AuthViewModel(ILoggerFactory loggerFactory)
     {
         _logger = loggerFactory.CreateLogger<AuthViewModel>();
     }
 
+    /// <summary>
+    /// Gets the command to submit the token.
+    /// </summary>
     public ICommand SubmitCommand => _submitCommand ??= new RelayCommand(Submit, CanSubmit);
 
+    /// <summary>
+    /// Event raised when a token is submitted.
+    /// </summary>
     public event EventHandler<string>? TokenSubmitted;
 
+    /// <summary>
+    /// Gets or sets the Lichess API token.
+    /// </summary>
     public string Token
     {
         get => _token;
@@ -34,6 +50,9 @@ public class AuthViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// Gets or sets the error message to display.
+    /// </summary>
     public string? ErrorMessage
     {
         get => _errorMessage;
@@ -44,11 +63,18 @@ public class AuthViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// Determines whether the token can be submitted.
+    /// </summary>
+    /// <returns>True if the token is not empty; otherwise, false.</returns>
     private bool CanSubmit()
     {
         return !string.IsNullOrWhiteSpace(Token);
     }
 
+    /// <summary>
+    /// Submits the token and raises the TokenSubmitted event.
+    /// </summary>
     private void Submit()
     {
         ErrorMessage = null;

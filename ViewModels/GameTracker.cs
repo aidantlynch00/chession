@@ -13,6 +13,9 @@ using Microsoft.Extensions.Logging;
 
 namespace chession.ViewModels;
 
+/// <summary>
+/// Tracks ongoing Lichess games and records results when they complete.
+/// </summary>
 public class GameTracker : IDisposable
 {
     private readonly ILichessService _lichessService;
@@ -23,6 +26,12 @@ public class GameTracker : IDisposable
     private Timer? _pollTimer;
     private bool _disposed;
 
+    /// <summary>
+    /// Initializes a new instance of the GameTracker class.
+    /// </summary>
+    /// <param name="lichessService">The Lichess service for API interactions.</param>
+    /// <param name="mainViewModel">The main ViewModel to record results to.</param>
+    /// <param name="logger">The logger for tracking events.</param>
     public GameTracker(ILichessService lichessService, MainViewModel mainViewModel, ILogger logger)
     {
         _lichessService = lichessService;
@@ -30,6 +39,9 @@ public class GameTracker : IDisposable
         _logger = logger;
     }
 
+    /// <summary>
+    /// Stops all active game streams and polling.
+    /// </summary>
     private void StopAll()
     {
         _pollTimer?.Dispose();
@@ -47,12 +59,18 @@ public class GameTracker : IDisposable
         _activeGameStreams.Clear();
     }
 
+    /// <summary>
+    /// Handles authentication failure by stopping tracking and notifying the main ViewModel.
+    /// </summary>
     private void HandleAuthenticationFailure()
     {
         StopAll();
         _mainViewModel.OnAuthenticationFailed();
     }
 
+    /// <summary>
+    /// Starts tracking ongoing games with periodic polling.
+    /// </summary>
     public async Task StartTrackingAsync()
     {
         _pollingCts = new CancellationTokenSource();
@@ -66,6 +84,10 @@ public class GameTracker : IDisposable
             TimeSpan.FromSeconds(10));
     }
 
+    /// <summary>
+    /// Refreshes the list of ongoing games and starts streaming new ones.
+    /// </summary>
+    /// <param name="ct">The cancellation token.</param>
     private async Task RefreshOngoingGamesAsync(CancellationToken ct)
     {
         try
@@ -98,6 +120,12 @@ public class GameTracker : IDisposable
         }
     }
 
+    /// <summary>
+    /// Streams moves for a game and records the result when it completes.
+    /// </summary>
+    /// <param name="gameId">The ID of the game to stream.</param>
+    /// <param name="userColor">The color the user was playing.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     private async Task StreamGameAsync(string gameId, Color userColor, CancellationToken cancellationToken)
     {
         _logger.LogDebug("Starting stream for game {GameId}", gameId);
@@ -142,6 +170,12 @@ public class GameTracker : IDisposable
         }
     }
 
+    /// <summary>
+    /// Determines the game result based on the game data.
+    /// </summary>
+    /// <param name="gameId">The ID of the game.</param>
+    /// <param name="userColor">The color the user was playing.</param>
+    /// <returns>The game result, or null if undetermined.</returns>
     private async Task<GameResult?> DetermineGameResultAsync(string gameId, Color userColor)
     {
         var game = await _lichessService.GetGameAsync(gameId);
@@ -167,6 +201,9 @@ public class GameTracker : IDisposable
         return null;
     }
 
+    /// <summary>
+    /// Disposes of the tracker and releases all resources.
+    /// </summary>
     public void Dispose()
     {
         if (_disposed) return;
