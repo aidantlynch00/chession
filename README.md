@@ -16,7 +16,7 @@ A cross-platform desktop application that tracks Lichess games played during a s
 
 To use chession, you need a Lichess API token:
 
-1. Go to [](https://lichess.org/account/oauth/token/create)
+1. Go to https://lichess.org/account/oauth/token/create
 2. Enter a description (e.g., "chession")
 3. Click "Generate Token"
 4. Copy the generated token
