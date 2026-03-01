@@ -1,0 +1,79 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: win-x64
+            artifact: chession-win-x64.zip
+          - platform: win-arm64
+            artifact: chession-win-arm64.zip
+          - platform: linux-x64
+            artifact: chession-linux-x64.tar.gz
+          - platform: linux-arm64
+            artifact: chession-linux-arm64.tar.gz
+          - platform: osx-x64
+            artifact: chession-osx-x64.tar.gz
+          - platform: osx-arm64
+            artifact: chession-osx-arm64.tar.gz
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build and Publish
+        run: |
+          dotnet publish chession.csproj -c Release -r ${{ matrix.platform }} -o ./publish/${{ matrix.platform }}
+
+      - name: Create artifact
+        working-directory: ./publish/${{ matrix.platform }}
+        run: |
+          if [[ "${{ matrix.platform }}" == win-* ]]; then
+            if ! command -v zip &> /dev/null; then
+              apt-get update && apt-get install -y zip
+            fi
+            zip -r ../${{ matrix.artifact }} *
+          else
+            tar -czf ../${{ matrix.artifact }} *
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ./publish/${{ matrix.artifact }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ./artifacts/**/*
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
