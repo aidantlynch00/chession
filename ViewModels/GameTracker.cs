@@ -76,10 +76,11 @@ public class GameTracker : IDisposable
             {
                 if (game.GameId == null) continue;
 
-                if (_activeGameStreams.TryAdd(game.GameId, CancellationTokenSource.CreateLinkedTokenSource(ct)))
+                CancellationTokenSource source = CancellationTokenSource.CreateLinkedTokenSource(ct);
+                if (_activeGameStreams.TryAdd(game.GameId, source))
                 {
-                    var color = game.Color.ToString().ToLower();
-                    _ = StreamGameAsync(game.GameId, color, _activeGameStreams[game.GameId].Token);
+                    var color = game.Color;
+                    _ = StreamGameAsync(game.GameId, color, source.Token);
                 }
             }
         }
@@ -97,7 +98,7 @@ public class GameTracker : IDisposable
         }
     }
 
-    private async Task StreamGameAsync(string gameId, string userColor, CancellationToken cancellationToken)
+    private async Task StreamGameAsync(string gameId, Color userColor, CancellationToken cancellationToken)
     {
         _logger.LogDebug("Starting stream for game {GameId}", gameId);
         try
@@ -141,33 +142,29 @@ public class GameTracker : IDisposable
         }
     }
 
-    private async Task<GameResult?> DetermineGameResultAsync(string gameId, string userColor)
+    private async Task<GameResult?> DetermineGameResultAsync(string gameId, Color userColor)
     {
         var game = await _lichessService.GetGameAsync(gameId);
-        var status = game.Status;
 
-        if (status == GameStatus.Aborted ||
-            status == GameStatus.NoStart ||
-            status == GameStatus.UnknownFinish ||
-            status == GameStatus.Started)
-            return null;
+        if (game.Winner.HasValue)
+        {
+            if (game.Winner.Value == userColor)
+            {
+                return GameResult.Win;
+            }
+            else
+            {
+                return GameResult.Loss;
+            }
+        }
 
-        if (status == GameStatus.Draw ||
-            status == GameStatus.Stalemate ||
-            status == GameStatus.Outoftime)
+        if (game.Status == GameStatus.Draw ||
+            game.Status == GameStatus.Stalemate ||
+            game.Status == GameStatus.Outoftime ||
+            game.Status == GameStatus.Timeout)
             return GameResult.Draw;
 
-        var winner = game.Winner;
-        if (!winner.HasValue)
-            return null;
-
-        var userIsWhite = userColor.Equals("white", StringComparison.OrdinalIgnoreCase);
-        var whiteWon = winner.Value == Color.White;
-
-        if (userIsWhite == whiteWon)
-            return GameResult.Win;
-
-        return GameResult.Loss;
+        return null;
     }
 
     public void Dispose()
