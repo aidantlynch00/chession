@@ -1,6 +1,8 @@
 # chession
 A cross-platform desktop application that tracks Lichess games played during a session, displaying wins/losses/draws with a prominent session score. Heavily inspired by Eric Rosen's Titled Tuesday score tracker.
 
+![Demo](assets/chession.png)
+
 ## Features
 
 - Session tracking with real-time game updates
