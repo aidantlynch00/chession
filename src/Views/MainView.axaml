@@ -9,7 +9,7 @@
              x:DataType="vm:MainViewModel">
 
     <Grid Background="#262626">
-        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="24">
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="12">
 
             <TextBlock Text="{Binding Profile.Username}"
                        FontSize="24"
@@ -37,7 +37,7 @@
                            HorizontalAlignment="Center" />
             </Border>
 
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="16">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="16" Margin="0,0,0,16">
                 <TextBlock FontSize="16" FontWeight="Bold">
                     <Run Text="W: " Foreground="#18A34A" />
                     <Run Text="{Binding Wins}" Foreground="#18A34A" />
