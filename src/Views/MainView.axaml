@@ -37,6 +37,21 @@
                            HorizontalAlignment="Center" />
             </Border>
 
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="16">
+                <TextBlock FontSize="16" FontWeight="Bold">
+                    <Run Text="W: " Foreground="#18A34A" />
+                    <Run Text="{Binding Wins}" Foreground="#18A34A" />
+                </TextBlock>
+                <TextBlock FontSize="16" FontWeight="Bold">
+                    <Run Text="D: " Foreground="#EBB30F" />
+                    <Run Text="{Binding Draws}" Foreground="#EBB30F" />
+                </TextBlock>
+                <TextBlock FontSize="16" FontWeight="Bold">
+                    <Run Text="L: " Foreground="#DD2627" />
+                    <Run Text="{Binding Losses}" Foreground="#DD2627" />
+                </TextBlock>
+            </StackPanel>
+
             <ItemsControl ItemsSource="{Binding DisplaySlots}"
                           HorizontalAlignment="Center"
                           IsVisible="{Binding !IsOverflowExpanded}">
